@@ -4,7 +4,7 @@ session_start();
 $brand = [
     'name' => 'Kapouch',
     'address' => 'Россия, Иркутская область, г. Шелехов, Култукский тракт 25/1',
-    'tagline' => 'Ultra-premium coffee experience',
+    'tagline' => 'Кофе с собой',
 ];
 
 if (empty($_SESSION['csrf_token'])) {
@@ -26,8 +26,8 @@ if (isset($_GET['status'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= htmlspecialchars($brand['name']) ?> — Black Card PWA</title>
-    <meta name="description" content="Цифровая Black-Card гостя Kapouch: статус, привилегии, бесконтактная оплата через Тинькофф СБП и фискализация чеков 54-ФЗ.">
+    <title><?= htmlspecialchars($brand['name']) ?> — Loyalty PWA</title>
+    <meta name="description" content="Loyalty PWA для Kapouch: каждая 6-я чашка бесплатно, кэшбэк баллами и удобная оплата СБП.">
     <meta name="theme-color" content="#f7cf28">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
@@ -41,29 +41,28 @@ if (isset($_GET['status'])) {
                     <span class="logo-mark">K</span>
                     <div>
                         <div class="logo-title"><?= htmlspecialchars($brand['name']) ?></div>
-                        <div class="logo-subtitle">Кофе с собой</div>
+                        <div class="logo-subtitle"><?= htmlspecialchars($brand['tagline']) ?></div>
                     </div>
                 </div>
                 <div class="nav-actions">
-                    <a class="nav-link" href="#experience">Опыт</a>
-                    <a class="nav-link" href="#payment">Оплата</a>
-                    <a class="nav-link" href="#tiers">Уровни</a>
+                    <a class="nav-link" href="#wallet">Карта</a>
+                    <a class="nav-link" href="#rewards">Награды</a>
+                    <a class="nav-link" href="#payments">Оплата</a>
                     <a class="nav-link" href="#concierge">Concierge</a>
                     <button class="install-btn" id="installButton" hidden>Установить PWA</button>
                 </div>
             </nav>
             <div class="hero-grid">
                 <div class="hero-copy">
-                    <p class="eyebrow">Привилегированный доступ</p>
-                    <h1>Цифровая Black‑Card гостя</h1>
+                    <p class="eyebrow">Loyalty для кофе с собой</p>
+                    <h1>6‑я чашка бесплатно + кэшбэк баллами</h1>
                     <p class="lead">
-                        Добро пожаловать в <?= htmlspecialchars($brand['name']) ?> — ultra‑luxury кофейню, где каждая деталь сервиса
-                        становится частью статуса. PWA‑карта заменяет пластик, усиливает персонализацию и открывает премиальные уровни
-                        привилегий.
+                        Kapouch Loyalty — это цифровая карта гостя, в которой каждая покупка превращается в баллы и штампы. Накопили
+                        5 штампов — получаете 6‑ю чашку бесплатно. Баллы можно тратить на апгрейды и лимитированные позиции.
                     </p>
                     <div class="hero-actions">
-                        <button class="primary">Получить доступ</button>
-                        <button class="ghost">Запросить консультацию</button>
+                        <button class="primary" data-action="simulate">Добавить покупку</button>
+                        <button class="ghost" data-action="redeem">Списать 6‑ю чашку</button>
                     </div>
                     <div class="hero-meta">
                         <div>
@@ -77,23 +76,23 @@ if (isset($_GET['status'])) {
                     </div>
                     <div class="stats-grid">
                         <div class="stat">
-                            <span class="stat-value">2 мин</span>
-                            <span class="stat-label">Среднее время обслуживания</span>
+                            <span class="stat-value" id="pointsValue">0</span>
+                            <span class="stat-label">Баллов доступно</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-value">24/7</span>
-                            <span class="stat-label">Личный concierge</span>
+                            <span class="stat-value" id="cashbackValue">0%</span>
+                            <span class="stat-label">Кэшбэк с заказа</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-value">99.9%</span>
-                            <span class="stat-label">Доступность сервиса</span>
+                            <span class="stat-value" id="freeCupsValue">0</span>
+                            <span class="stat-label">Бесплатных чашек</span>
                         </div>
                     </div>
                 </div>
                 <div class="hero-card">
                     <div class="card-top">
                         <span class="card-chip"></span>
-                        <span class="card-tier">BLACK</span>
+                        <span class="card-tier">LOYALTY</span>
                     </div>
                     <div class="card-number">•••• 9182</div>
                     <div class="card-name">GUEST NO. 00024</div>
@@ -101,7 +100,7 @@ if (isset($_GET['status'])) {
                         <span>Kapouch</span>
                         <span id="cardDate">--/--</span>
                     </div>
-                    <div class="card-badge">Premium access</div>
+                    <div class="card-badge">To‑go format</div>
                 </div>
             </div>
         </header>
@@ -113,143 +112,109 @@ if (isset($_GET['status'])) {
                 </div>
             <?php endif; ?>
 
-            <section class="section" id="experience">
+            <section class="section wallet" id="wallet">
                 <div class="section-head">
-                    <h2>Сервис уровня private club</h2>
-                    <p>Каждое касание с брендом — это сценарий luxury‑опыта: скорость, приватность и персонализация.</p>
+                    <h2>Цифровая карта гостя</h2>
+                    <p>Все бонусы, штампы и история заказов — в одном экране, без пластика и лишних приложений.</p>
                 </div>
-                <div class="feature-grid">
-                    <article>
-                        <h3>Персональная идентификация</h3>
-                        <p>Безопасная цифровая карта с биометрической верификацией на устройстве гостя.</p>
-                    </article>
-                    <article>
-                        <h3>СБП‑оплата от Тинькофф</h3>
-                        <p>Мгновенные платежи по QR‑коду с подтверждением в приложении банка.</p>
-                    </article>
-                    <article>
-                        <h3>Фискализация 54‑ФЗ</h3>
-                        <p>Автоматическая отправка чеков через Тинькофф и хранение истории транзакций.</p>
-                    </article>
-                    <article>
-                        <h3>Concierge‑сервис</h3>
-                        <p>Персональные предложения, дегустации и early access к лимитированным коллекциям.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="section card-section" id="tiers">
-                <div class="section-head">
-                    <h2>Black‑Card интерфейс</h2>
-                    <p>Минималистичная PWA‑витрина поддерживает офлайн‑режим и мгновенную загрузку на shared‑хостинге.</p>
-                </div>
-                <div class="tiers">
-                    <div class="tier">
-                        <div class="tier-title">Prestige</div>
-                        <p>Персональные бариста-сессии и закрытые дегустации.</p>
-                        <span class="tier-amount">от 25 000 ₽ / мес</span>
+                <div class="wallet-grid">
+                    <div class="wallet-card">
+                        <div class="wallet-head">
+                            <h3>Штампы за кофе</h3>
+                            <span class="wallet-sub">5 штампов = 6‑я чашка бесплатно</span>
+                        </div>
+                        <div class="stamp-grid" id="stampGrid"></div>
+                        <p class="wallet-note">Штампы начисляются автоматически после оплаты через СБП.</p>
                     </div>
-                    <div class="tier">
-                        <div class="tier-title">Signature</div>
-                        <p>Private бронирование и priority обслуживание.</p>
-                        <span class="tier-amount">от 15 000 ₽ / мес</span>
-                    </div>
-                    <div class="tier">
-                        <div class="tier-title">Reserve</div>
-                        <p>Доступ к лимитированным релизам и закрытым лотам.</p>
-                        <span class="tier-amount">от 8 000 ₽ / мес</span>
+                    <div class="wallet-card">
+                        <div class="wallet-head">
+                            <h3>Баллы и кэшбэк</h3>
+                            <span class="wallet-sub">до 12% от суммы заказа</span>
+                        </div>
+                        <div class="points-box">
+                            <div>
+                                <span class="points-label">Доступно</span>
+                                <span class="points-value" id="pointsWallet">0</span>
+                            </div>
+                            <div>
+                                <span class="points-label">Следующий статус</span>
+                                <span class="points-value" id="nextTier">Silver</span>
+                            </div>
+                        </div>
+                        <p class="wallet-note">Баллы можно обменивать на сиропы, апгрейд размера и лимитированные напитки.</p>
                     </div>
                 </div>
             </section>
 
-            <section class="section journey">
+            <section class="section rewards" id="rewards">
                 <div class="section-head">
-                    <h2>Сценарий визита</h2>
-                    <p>Путь гостя от бронирования до оплаты выстроен как бесшовный luxury‑ритуал.</p>
+                    <h2>Награды и апгрейды</h2>
+                    <p>Баллы и бесплатные чашки открывают доступ к дополнительным привилегиям.</p>
                 </div>
-                <div class="timeline">
-                    <div class="timeline-step">
-                        <span class="step-index">01</span>
-                        <div>
-                            <h3>Private бронирование</h3>
-                            <p>Concierge подтверждает визит и подготавливает индивидуальный сет.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-step">
-                        <span class="step-index">02</span>
-                        <div>
-                            <h3>Идентификация Black‑Card</h3>
-                            <p>PWA‑карта активируется в один тап, открывая персональные настройки.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-step">
-                        <span class="step-index">03</span>
-                        <div>
-                            <h3>СБП‑оплата</h3>
-                            <p>QR‑код формируется автоматически, чек фискализируется через Тинькофф.</p>
-                        </div>
-                    </div>
+                <div class="reward-grid">
+                    <article>
+                        <h3>6‑я чашка бесплатно</h3>
+                        <p>Накопите 5 штампов и получите шестую чашку любого напитка бесплатно.</p>
+                        <span class="reward-tag">Штампы</span>
+                    </article>
+                    <article>
+                        <h3>Апгрейд размера</h3>
+                        <p>Списывайте баллы, чтобы увеличить напиток до большего объема.</p>
+                        <span class="reward-tag">120 баллов</span>
+                    </article>
+                    <article>
+                        <h3>Лимитированный релиз</h3>
+                        <p>Доступ к сезонным напиткам раньше остальных гостей.</p>
+                        <span class="reward-tag">VIP</span>
+                    </article>
                 </div>
             </section>
 
-            <section class="section payment-section" id="payment">
+            <section class="section payments" id="payments">
                 <div class="section-head">
-                    <h2>Оплата и чеки</h2>
-                    <p>Единый поток оплаты СБП + фискализация 54‑ФЗ — полностью совместим с Тинькофф и Beget.</p>
+                    <h2>Оплата и фискализация</h2>
+                    <p>Единый поток: СБП‑оплата через Тинькофф, фискальные чеки и мгновенное начисление бонусов.</p>
                 </div>
                 <div class="payment-grid">
                     <div class="payment-card">
                         <h3>СБП QR‑платеж</h3>
                         <ul>
-                            <li>QR‑код формируется на кассе или в PWA.</li>
-                            <li>Подтверждение платежа в приложении банка.</li>
-                            <li>Мгновенное обновление статуса визита.</li>
+                            <li>QR‑код формируется кассой или в PWA.</li>
+                            <li>Оплата подтверждается в приложении банка.</li>
+                            <li>Бонусы начисляются мгновенно.</li>
                         </ul>
                     </div>
                     <div class="payment-card">
-                        <h3>Фискальные чеки</h3>
+                        <h3>54‑ФЗ чеки</h3>
                         <ul>
-                            <li>Передача данных в ОФД через API Тинькофф.</li>
-                            <li>Отправка чеков в SMS/Email гостя.</li>
-                            <li>Архив чеков в личном кабинете.</li>
+                            <li>Фискализация через Тинькофф ОФД.</li>
+                            <li>Чек доступен в личном кабинете.</li>
+                            <li>Отправка по SMS или email.</li>
                         </ul>
                     </div>
                     <div class="payment-card">
                         <h3>Shared‑хостинг ready</h3>
                         <ul>
-                            <li>PHP 8.x + MySQL без фоновых сервисов.</li>
-                            <li>Всё — на ванильном HTML/CSS/JS.</li>
+                            <li>PHP 8.x + MySQL, без фоновых сервисов.</li>
+                            <li>Vanilla HTML/CSS/JS без Node.</li>
                             <li>Сервис‑воркер для офлайн‑режима.</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            <section class="section tech">
+            <section class="section history">
                 <div class="section-head">
-                    <h2>Технологическая витрина</h2>
-                    <p>Система готова к интеграции с POS, CRM и витринами премиального контента.</p>
+                    <h2>История визитов</h2>
+                    <p>Прозрачная история начислений и списаний.</p>
                 </div>
-                <div class="tech-grid">
-                    <div class="tech-card">
-                        <h3>PWA‑ядро</h3>
-                        <p>Мгновенный запуск, офлайн‑режим и установка в один тап без App Store.</p>
-                    </div>
-                    <div class="tech-card">
-                        <h3>Безопасность</h3>
-                        <p>CSRF‑защита формы и минимизация данных для персональных запросов.</p>
-                    </div>
-                    <div class="tech-card">
-                        <h3>Гибкая аналитика</h3>
-                        <p>Сегментация гостей и контроль LTV на уровне событий.</p>
-                    </div>
-                </div>
+                <div class="history-list" id="historyList"></div>
             </section>
 
             <section class="section concierge" id="concierge">
                 <div class="section-head">
-                    <h2>Индивидуальный concierge</h2>
-                    <p>Оставьте контакт, и мы персонализируем карту под ваши привычки.</p>
+                    <h2>Concierge для корпоративных заказов</h2>
+                    <p>Партнерский coffee‑service для офисов и мероприятий.</p>
                 </div>
                 <form class="concierge-form" id="conciergeForm" action="/submit.php" method="post">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
@@ -262,34 +227,13 @@ if (isset($_GET['status'])) {
                         <input type="text" name="contact" placeholder="Телефон или e-mail" maxlength="80" required>
                     </label>
                     <label>
-                        Предпочтения
-                        <textarea name="preferences" placeholder="Например: авторские напитки, приватный зал" maxlength="400"></textarea>
+                        Комментарий
+                        <textarea name="preferences" placeholder="Например: корпоративные заказы, доставить к 10:00" maxlength="400"></textarea>
                     </label>
                     <button type="submit" class="primary" id="submitButton">Отправить запрос</button>
                     <p class="form-note">Мы используем данные только для связи и персонализации сервиса.</p>
                 </form>
                 <div class="toast" id="formToast" hidden></div>
-            </section>
-
-            <section class="section faq">
-                <div class="section-head">
-                    <h2>FAQ</h2>
-                    <p>Ответы на частые вопросы о работе Black‑Card.</p>
-                </div>
-                <div class="faq-grid">
-                    <details>
-                        <summary>Как получить Black‑Card?</summary>
-                        <p>Оставьте заявку через concierge‑форму. Мы свяжемся и согласуем удобный формат активации.</p>
-                    </details>
-                    <details>
-                        <summary>Где хранится история чеков?</summary>
-                        <p>Чеки сохраняются в личном кабинете и отправляются гостю в SMS или email.</p>
-                    </details>
-                    <details>
-                        <summary>Можно ли пользоваться картой офлайн?</summary>
-                        <p>Да, ключевые данные доступны офлайн благодаря сервис‑воркеру PWA.</p>
-                    </details>
-                </div>
             </section>
         </main>
 
@@ -299,8 +243,8 @@ if (isset($_GET['status'])) {
                 <p><?= htmlspecialchars($brand['address']) ?></p>
             </div>
             <div>
-                <p>© <?= date('Y') ?> Kapouch. Luxury coffee atelier.</p>
-                <p>Лицензированная обработка платежей через Тинькофф СБП.</p>
+                <p>© <?= date('Y') ?> Kapouch. Кофе с собой.</p>
+                <p>Оплата и фискализация через Тинькофф СБП.</p>
             </div>
         </footer>
     </div>
