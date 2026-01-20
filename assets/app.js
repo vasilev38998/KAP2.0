@@ -1,19 +1,39 @@
 const installButton = document.getElementById('installButton');
-const cardDate = document.getElementById('cardDate');
-const conciergeForm = document.getElementById('conciergeForm');
-const submitButton = document.getElementById('submitButton');
-const formToast = document.getElementById('formToast');
+
+const authScreen = document.getElementById('authScreen');
+const dashboard = document.getElementById('dashboard');
+const authForm = document.getElementById('authForm');
+const authButton = document.getElementById('authButton');
+const otpField = document.getElementById('otpField');
+const bottomNav = document.getElementById('bottomNav');
+
+const tabOffers = document.getElementById('tabOffers');
+const tabWallet = document.getElementById('tabWallet');
+const tabProfile = document.getElementById('tabProfile');
 
 const stampGrid = document.getElementById('stampGrid');
 const historyList = document.getElementById('historyList');
-const pointsValue = document.getElementById('pointsValue');
-const pointsWallet = document.getElementById('pointsWallet');
-const cashbackValue = document.getElementById('cashbackValue');
-const freeCupsValue = document.getElementById('freeCupsValue');
-const nextTier = document.getElementById('nextTier');
+const pointsBalance = document.getElementById('pointsBalance');
+const cashbackPercent = document.getElementById('cashbackPercent');
+const walletPoints = document.getElementById('walletPoints');
+const walletFree = document.getElementById('walletFree');
+const walletTier = document.getElementById('walletTier');
+const profilePhone = document.getElementById('profilePhone');
+const profileTier = document.getElementById('profileTier');
 
-const actions = document.querySelectorAll('[data-action]');
-const storageKey = 'kapouch-loyalty';
+const addStampButton = document.getElementById('addStamp');
+const redeemCupButton = document.getElementById('redeemCup');
+const scanButton = document.getElementById('scanButton');
+const logoutButton = document.getElementById('logoutButton');
+
+const storageKey = 'kapouch-loyalty-profile';
+const loyaltyKey = 'kapouch-loyalty-state';
+
+const tiers = [
+    { name: 'Silver', threshold: 0, cashback: 4 },
+    { name: 'Gold', threshold: 800, cashback: 7 },
+    { name: 'Black', threshold: 1800, cashback: 10 },
+];
 
 const defaultState = {
     stamps: 0,
@@ -22,16 +42,9 @@ const defaultState = {
     history: [],
 };
 
-const tiers = [
-    { name: 'Bronze', threshold: 0, cashback: 3 },
-    { name: 'Silver', threshold: 500, cashback: 6 },
-    { name: 'Gold', threshold: 1200, cashback: 9 },
-    { name: 'Black', threshold: 2000, cashback: 12 },
-];
-
 const loadState = () => {
     try {
-        const saved = localStorage.getItem(storageKey);
+        const saved = localStorage.getItem(loyaltyKey);
         return saved ? { ...defaultState, ...JSON.parse(saved) } : { ...defaultState };
     } catch (error) {
         return { ...defaultState };
@@ -39,7 +52,7 @@ const loadState = () => {
 };
 
 const saveState = (state) => {
-    localStorage.setItem(storageKey, JSON.stringify(state));
+    localStorage.setItem(loyaltyKey, JSON.stringify(state));
 };
 
 const getTier = (points) => {
@@ -78,7 +91,7 @@ const renderHistory = (state) => {
         historyList.appendChild(empty);
         return;
     }
-    state.history.slice(0, 6).forEach((entry) => {
+    state.history.slice(0, 5).forEach((entry) => {
         const item = document.createElement('div');
         item.className = 'history-item';
         item.innerHTML = `
@@ -95,17 +108,13 @@ const renderHistory = (state) => {
 const renderStats = (state) => {
     const tier = getTier(state.points);
     const next = getNextTier(state.points);
-    if (pointsValue) pointsValue.textContent = state.points;
-    if (pointsWallet) pointsWallet.textContent = `${state.points} баллов`;
-    if (cashbackValue) cashbackValue.textContent = `${tier.cashback}%`;
-    if (freeCupsValue) freeCupsValue.textContent = state.freeCups;
-    if (nextTier) nextTier.textContent = next ? next.name : 'Black';
-};
 
-const renderAll = (state) => {
-    renderStamps(state);
-    renderHistory(state);
-    renderStats(state);
+    if (pointsBalance) pointsBalance.textContent = state.points;
+    if (cashbackPercent) cashbackPercent.textContent = `${tier.cashback}%`;
+    if (walletPoints) walletPoints.textContent = state.points;
+    if (walletFree) walletFree.textContent = state.freeCups;
+    if (walletTier) walletTier.textContent = next ? next.name : 'Black';
+    if (profileTier) profileTier.textContent = tier.name;
 };
 
 const addHistory = (state, entry) => {
@@ -115,64 +124,158 @@ const addHistory = (state, entry) => {
 
 const simulatePurchase = (state) => {
     state.stamps += 1;
-    state.points += 80;
+    state.points += 120;
     addHistory(state, {
-        title: 'Latte / To-go',
-        subtitle: 'Начислено 1 штамп + 80 баллов',
-        points: '+80',
+        title: 'Капучино / To-go',
+        subtitle: 'Начислено 1 штамп + 120 баллов',
+        points: '+120',
     });
     if (state.stamps >= 5) {
         state.freeCups += 1;
         state.stamps = 0;
         addHistory(state, {
             title: 'Бесплатная чашка доступна',
-            subtitle: 'Поздравляем! Можно списать 6‑ю чашку.',
+            subtitle: 'Можно списать 6‑ю чашку.',
             points: '+1',
         });
     }
 };
 
 const redeemCup = (state) => {
-    if (state.freeCups <= 0) return false;
+    if (state.freeCups <= 0) {
+        addHistory(state, {
+            title: 'Недостаточно штампов',
+            subtitle: 'Накопите 5 штампов для бесплатной чашки.',
+            points: '0',
+        });
+        return;
+    }
     state.freeCups -= 1;
     addHistory(state, {
         title: 'Списана 6‑я чашка',
         subtitle: 'Наслаждайтесь напитком бесплатно.',
         points: '0',
     });
-    return true;
 };
+
+const renderAll = (state) => {
+    renderStamps(state);
+    renderHistory(state);
+    renderStats(state);
+    saveState(state);
+};
+
+const showTab = (tab) => {
+    if (!dashboard || !tabOffers || !tabWallet || !tabProfile) return;
+    dashboard.hidden = tab !== 'home';
+    tabOffers.hidden = tab !== 'offers';
+    tabWallet.hidden = tab !== 'wallet';
+    tabProfile.hidden = tab !== 'profile';
+
+    const links = bottomNav?.querySelectorAll('.bottom-link');
+    links?.forEach((link) => {
+        link.classList.toggle('is-active', link.dataset.tab === tab);
+    });
+};
+
+const setAuthenticated = (profile) => {
+    authScreen.hidden = true;
+    dashboard.hidden = false;
+    bottomNav.hidden = false;
+    if (profilePhone) profilePhone.textContent = profile.phone;
+    showTab('home');
+};
+
+const setLoggedOut = () => {
+    authScreen.hidden = false;
+    dashboard.hidden = true;
+    tabOffers.hidden = true;
+    tabWallet.hidden = true;
+    tabProfile.hidden = true;
+    bottomNav.hidden = true;
+};
+
+const handleAuth = () => {
+    const storedProfile = localStorage.getItem(storageKey);
+    if (storedProfile) {
+        setAuthenticated(JSON.parse(storedProfile));
+    } else {
+        setLoggedOut();
+    }
+};
+
+if (authForm) {
+    authForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(authForm);
+        const phone = String(formData.get('phone') || '').trim();
+        const otp = String(formData.get('otp') || '').trim();
+
+        if (!phone) return;
+
+        if (otpField.hidden) {
+            otpField.hidden = false;
+            authButton.textContent = 'Войти';
+            return;
+        }
+
+        if (otp !== '1234') {
+            authButton.textContent = 'Неверный код';
+            setTimeout(() => {
+                authButton.textContent = 'Войти';
+            }, 1200);
+            return;
+        }
+
+        const profile = { phone };
+        localStorage.setItem(storageKey, JSON.stringify(profile));
+        setAuthenticated(profile);
+    });
+}
+
+if (bottomNav) {
+    bottomNav.addEventListener('click', (event) => {
+        const target = event.target.closest('.bottom-link');
+        if (!target) return;
+        showTab(target.dataset.tab);
+    });
+}
+
+const quickCards = document.querySelectorAll('.quick-card');
+quickCards.forEach((card) => {
+    card.addEventListener('click', () => {
+        showTab(card.dataset.tab);
+    });
+});
 
 const state = loadState();
 renderAll(state);
 
-actions.forEach((button) => {
-    button.addEventListener('click', () => {
-        const action = button.dataset.action;
-        if (action === 'simulate') {
-            simulatePurchase(state);
-        }
-        if (action === 'redeem') {
-            const success = redeemCup(state);
-            if (!success) {
-                addHistory(state, {
-                    title: 'Недостаточно штампов',
-                    subtitle: 'Накопите 5 штампов для бесплатной чашки.',
-                    points: '0',
-                });
-            }
-        }
-        saveState(state);
-        renderAll(state);
-    });
+addStampButton?.addEventListener('click', () => {
+    simulatePurchase(state);
+    renderAll(state);
 });
 
-if (cardDate) {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = String(now.getFullYear()).slice(-2);
-    cardDate.textContent = `${month}/${year}`;
-}
+redeemCupButton?.addEventListener('click', () => {
+    redeemCup(state);
+    renderAll(state);
+});
+
+scanButton?.addEventListener('click', () => {
+    addHistory(state, {
+        title: 'Сканирование QR',
+        subtitle: 'QR‑код готов для кассира.',
+        points: '0',
+    });
+    renderAll(state);
+});
+
+logoutButton?.addEventListener('click', () => {
+    localStorage.removeItem(storageKey);
+    setLoggedOut();
+});
+
+handleAuth();
 
 let deferredPrompt = null;
 
@@ -193,49 +296,6 @@ if (installButton) {
         await deferredPrompt.userChoice;
         deferredPrompt = null;
         installButton.hidden = true;
-    });
-}
-
-if (conciergeForm) {
-    conciergeForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Отправляем...';
-        }
-        if (formToast) {
-            formToast.hidden = true;
-        }
-
-        try {
-            const response = await fetch(conciergeForm.action, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: new FormData(conciergeForm),
-            });
-            const payload = await response.json();
-            if (formToast) {
-                formToast.textContent = payload.message || 'Запрос отправлен.';
-                formToast.hidden = false;
-                formToast.classList.toggle('toast--error', !payload.success);
-            }
-            if (payload.success) {
-                conciergeForm.reset();
-            }
-        } catch (error) {
-            if (formToast) {
-                formToast.textContent = 'Сервис временно недоступен. Попробуйте позже.';
-                formToast.hidden = false;
-                formToast.classList.add('toast--error');
-            }
-        } finally {
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Отправить запрос';
-            }
-        }
     });
 }
 

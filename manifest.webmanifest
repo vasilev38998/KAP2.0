@@ -1,12 +1,12 @@
 {
-    "name": "Kapouch Loyalty",
+    "name": "Kapouch Loyalty App",
     "short_name": "Kapouch",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
     "background_color": "#f7cf28",
     "theme_color": "#f7cf28",
-    "description": "Цифровая Black-Card гостя Kapouch с оплатой через Тинькофф СБП и фискализацией 54-ФЗ.",
+    "description": "Kapouch Loyalty — приложение для баллов, штампов и бесплатного 6-го кофе.",
     "icons": [
         {
             "src": "/assets/icon.svg",
