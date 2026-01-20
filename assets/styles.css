@@ -44,7 +44,7 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 8vw 12px;
+    padding: 20px 8vw 12px;
     gap: 16px;
 }
 
@@ -55,8 +55,8 @@ button {
 }
 
 .logo-mark {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     display: grid;
     place-items: center;
@@ -95,19 +95,46 @@ button {
 }
 
 .auth-card {
-    max-width: 420px;
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px;
-    box-shadow: 0 20px 40px rgba(91, 43, 26, 0.12);
+    width: min(520px, 100%);
+    background: transparent;
+    padding: 8px 0 24px;
     display: grid;
     gap: 16px;
 }
 
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.9;
+}
+
+.status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-icons .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text);
+}
+
+.status-icons .battery {
+    font-size: 12px;
+    background: var(--text);
+    color: #f7cf28;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
 .auth-card h1 {
-    font-size: 26px;
+    font-size: clamp(28px, 3vw, 36px);
+    font-weight: 800;
 }
 
 .auth-form {
@@ -115,26 +142,51 @@ button {
     gap: 14px;
 }
 
+.auth-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
 .auth-form label {
     display: grid;
     gap: 6px;
     font-size: 14px;
-    color: var(--muted);
+    color: var(--text);
+    font-weight: 600;
 }
 
 .auth-form input {
     width: 100%;
-    background: var(--white);
-    border: 1px solid rgba(91, 43, 26, 0.2);
+    background: #fff;
+    border: 1px solid rgba(91, 43, 26, 0.3);
     color: var(--text);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-size: 14px;
+}
+
+.otp-field {
+    transition: opacity 0.3s ease;
+}
+
+.otp-field.is-visible {
+    opacity: 1;
 }
 
 .auth-note {
     font-size: 12px;
     color: var(--muted);
+}
+
+.auth-error {
+    background: rgba(91, 43, 26, 0.1);
+    border: 1px solid rgba(91, 43, 26, 0.2);
+    color: var(--gold);
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 12px;
 }
 
 .primary,
@@ -144,6 +196,7 @@ button {
     font-size: 14px;
     letter-spacing: 0.05em;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .primary {
@@ -151,6 +204,7 @@ button {
     background: linear-gradient(120deg, #f7cf28, #f0b70d);
     color: #5b2b1a;
     font-weight: 700;
+    box-shadow: 0 8px 18px rgba(91, 43, 26, 0.2);
 }
 
 .ghost {
@@ -405,7 +459,19 @@ button {
 
 @media (max-width: 720px) {
     .app-header {
-        padding: 20px 6vw 12px;
+        padding: 16px 6vw 12px;
+    }
+
+    .auth {
+        padding: 16px 6vw 32px;
+    }
+
+    .auth-row {
+        grid-template-columns: 1fr;
+    }
+
+    .primary {
+        width: 100%;
     }
 
     .dashboard,

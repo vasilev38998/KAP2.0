@@ -5,6 +5,7 @@ const dashboard = document.getElementById('dashboard');
 const authForm = document.getElementById('authForm');
 const authButton = document.getElementById('authButton');
 const otpField = document.getElementById('otpField');
+const authError = document.getElementById('authError');
 const bottomNav = document.getElementById('bottomNav');
 
 const tabOffers = document.getElementById('tabOffers');
@@ -204,26 +205,43 @@ const handleAuth = () => {
     }
 };
 
-if (authForm) {
+const showError = (message) => {
+    if (!authError) return;
+    authError.textContent = message;
+    authError.hidden = false;
+};
+
+const clearError = () => {
+    if (!authError) return;
+    authError.hidden = true;
+};
+
+if (authForm && authButton && otpField) {
     authForm.addEventListener('submit', (event) => {
         event.preventDefault();
+    });
+
+    authButton.addEventListener('click', () => {
         const formData = new FormData(authForm);
         const phone = String(formData.get('phone') || '').trim();
         const otp = String(formData.get('otp') || '').trim();
 
-        if (!phone) return;
+        clearError();
+
+        if (!phone) {
+            showError('Введите номер телефона, чтобы получить код.');
+            return;
+        }
 
         if (otpField.hidden) {
             otpField.hidden = false;
+            otpField.classList.add('is-visible');
             authButton.textContent = 'Войти';
             return;
         }
 
         if (otp !== '1234') {
-            authButton.textContent = 'Неверный код';
-            setTimeout(() => {
-                authButton.textContent = 'Войти';
-            }, 1200);
+            showError('Неверный код. Попробуйте 1234.');
             return;
         }
 

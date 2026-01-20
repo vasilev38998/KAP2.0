@@ -39,19 +39,31 @@ if (empty($_SESSION['csrf_token'])) {
 
         <section class="auth" id="authScreen">
             <div class="auth-card">
+                <div class="status-bar">
+                    <span>14:21</span>
+                    <div class="status-icons">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="battery">43</span>
+                    </div>
+                </div>
                 <h1>Вход по номеру телефона</h1>
                 <p>Введите номер — мы отправим код подтверждения. В демо‑режиме используйте код <strong>1234</strong>.</p>
-                <form id="authForm" class="auth-form">
-                    <label>
-                        Телефон
-                        <input type="tel" name="phone" placeholder="+7 (999) 000-00-00" required>
-                    </label>
+                <form id="authForm" class="auth-form" novalidate>
+                    <div class="auth-row">
+                        <label>
+                            Телефон
+                            <input type="tel" name="phone" placeholder="+7 (999) 000-00-00" inputmode="tel">
+                        </label>
+                        <button type="button" class="primary" id="authButton">Получить код</button>
+                    </div>
                     <label class="otp-field" id="otpField" hidden>
                         Код из SMS
                         <input type="text" name="otp" placeholder="1234" maxlength="4" inputmode="numeric">
                     </label>
-                    <button type="submit" class="primary" id="authButton">Получить код</button>
                 </form>
+                <p class="auth-error" id="authError" hidden></p>
                 <p class="auth-note">Нажимая «Получить код», вы соглашаетесь с правилами программы лояльности.</p>
             </div>
         </section>
