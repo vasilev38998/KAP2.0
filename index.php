@@ -78,6 +78,24 @@ if (empty($_SESSION['csrf_token'])) {
                 <button class="ghost" id="scanButton">Сканировать QR</button>
             </div>
 
+            <div class="insight-grid">
+                <div class="insight-card">
+                    <span>Серия визитов</span>
+                    <strong><span id="streakValue">0</span> дней подряд</strong>
+                    <small>+25 баллов за 3 дня подряд</small>
+                </div>
+                <div class="insight-card">
+                    <span>Эко‑бонус</span>
+                    <strong id="ecoStatus">Не активен</strong>
+                    <small>+10 баллов за свой стакан</small>
+                </div>
+                <div class="insight-card">
+                    <span>Любимый напиток</span>
+                    <strong id="favoriteDrink">Не выбран</strong>
+                    <small>Скидка 5% на любимый вкус</small>
+                </div>
+            </div>
+
             <div class="stamp-card">
                 <div class="stamp-head">
                     <h3>Карта 6‑го кофе</h3>
@@ -85,6 +103,25 @@ if (empty($_SESSION['csrf_token'])) {
                 </div>
                 <div class="stamp-grid" id="stampGrid"></div>
                 <button class="primary" id="addStamp">Добавить покупку</button>
+            </div>
+
+            <div class="pickup-card">
+                <div class="section-head">
+                    <h3>Заказ заранее</h3>
+                    <button class="ghost" id="startPickup">Запустить таймер</button>
+                </div>
+                <div class="pickup-row">
+                    <label>
+                        Время получения
+                        <select id="pickupTime">
+                            <option value="10">Через 10 минут</option>
+                            <option value="20">Через 20 минут</option>
+                            <option value="30">Через 30 минут</option>
+                            <option value="45">Через 45 минут</option>
+                        </select>
+                    </label>
+                    <div class="pickup-status" id="pickupStatus">Ожидает запуска</div>
+                </div>
             </div>
 
             <div class="notification-card">
@@ -126,6 +163,36 @@ if (empty($_SESSION['csrf_token'])) {
                         <p>Начислим +2 штампа за утренний заказ до 11:00.</p>
                         <span>Сегодня</span>
                     </article>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-head">
+                    <h3>Ваша миссия недели</h3>
+                    <a href="#" class="section-link">Прогресс</a>
+                </div>
+                <div class="mission-card">
+                    <div>
+                        <strong>3 визита за неделю</strong>
+                        <span>Получите +200 баллов и фирменный десерт.</span>
+                    </div>
+                    <div class="mission-progress">
+                        <div class="mission-bar" id="missionBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-head">
+                    <h3>Реферальная программа</h3>
+                    <a href="#" class="section-link">Пригласить</a>
+                </div>
+                <div class="referral-card">
+                    <div>
+                        <strong>Ваш код</strong>
+                        <span id="referralCode">KAP-7421</span>
+                    </div>
+                    <button class="ghost" id="copyReferral">Скопировать</button>
                 </div>
             </div>
 
@@ -215,6 +282,16 @@ if (empty($_SESSION['csrf_token'])) {
                     <input type="date" id="birthdayInput">
                 </label>
                 <label class="profile-field">
+                    <span class="profile-label">Любимый напиток</span>
+                    <select id="favoriteSelect">
+                        <option value="">Не выбран</option>
+                        <option value="Капучино">Капучино</option>
+                        <option value="Латте">Латте</option>
+                        <option value="Флэт уайт">Флэт уайт</option>
+                        <option value="Американо">Американо</option>
+                    </select>
+                </label>
+                <label class="profile-field">
                     <span class="profile-label">Статус</span>
                     <strong id="profileTier">Silver</strong>
                 </label>
@@ -229,6 +306,13 @@ if (empty($_SESSION['csrf_token'])) {
                     <span class="profile-label">Push поздравления</span>
                     <div class="toggle">
                         <input type="checkbox" id="birthdayToggle">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="profile-field">
+                    <span class="profile-label">Эко‑бонус</span>
+                    <div class="toggle">
+                        <input type="checkbox" id="ecoToggle">
                         <span></span>
                     </div>
                 </label>

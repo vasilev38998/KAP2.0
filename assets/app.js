@@ -23,14 +23,25 @@ const walletTier = document.getElementById('walletTier');
 const profilePhone = document.getElementById('profilePhone');
 const profileTier = document.getElementById('profileTier');
 const birthdayInput = document.getElementById('birthdayInput');
+const favoriteSelect = document.getElementById('favoriteSelect');
 const promoToggle = document.getElementById('promoToggle');
 const birthdayToggle = document.getElementById('birthdayToggle');
+const ecoToggle = document.getElementById('ecoToggle');
+const ecoStatus = document.getElementById('ecoStatus');
+const favoriteDrink = document.getElementById('favoriteDrink');
+const streakValue = document.getElementById('streakValue');
+const pickupStatus = document.getElementById('pickupStatus');
+const pickupTime = document.getElementById('pickupTime');
+const missionBar = document.getElementById('missionBar');
+const referralCode = document.getElementById('referralCode');
 
 const addStampButton = document.getElementById('addStamp');
 const redeemCupButton = document.getElementById('redeemCup');
 const scanButton = document.getElementById('scanButton');
 const logoutButton = document.getElementById('logoutButton');
 const testPushButton = document.getElementById('testPush');
+const startPickupButton = document.getElementById('startPickup');
+const copyReferralButton = document.getElementById('copyReferral');
 
 const storageKey = 'kapouch-loyalty-profile';
 const loyaltyKey = 'kapouch-loyalty-state';
@@ -47,13 +58,18 @@ const defaultState = {
     points: 0,
     freeCups: 0,
     history: [],
+    streak: 0,
+    lastVisit: null,
+    missionProgress: 0,
 };
 
 const defaultProfile = {
     phone: '',
     birthday: '',
+    favorite: '',
     promoOptIn: true,
     birthdayOptIn: true,
+    ecoOptIn: false,
 };
 
 const loadState = () => {
@@ -164,7 +180,7 @@ const renderNotifications = (notifications) => {
     });
 };
 
-const renderStats = (state) => {
+const renderStats = (state, profile) => {
     const tier = getTier(state.points);
     const next = getNextTier(state.points);
 
@@ -174,6 +190,12 @@ const renderStats = (state) => {
     if (walletFree) walletFree.textContent = state.freeCups;
     if (walletTier) walletTier.textContent = next ? next.name : 'Black';
     if (profileTier) profileTier.textContent = tier.name;
+    if (streakValue) streakValue.textContent = state.streak;
+    if (favoriteDrink) favoriteDrink.textContent = profile.favorite || 'Не выбран';
+    if (ecoStatus) ecoStatus.textContent = profile.ecoOptIn ? 'Активен' : 'Не активен';
+    if (missionBar) {
+        missionBar.style.width = `${Math.min(state.missionProgress, 100)}%`;
+    }
 };
 
 const addHistory = (state, entry) => {
@@ -187,13 +209,38 @@ const addNotification = (notifications, entry) => {
     renderNotifications(notifications);
 };
 
-const simulatePurchase = (state) => {
+const updateStreak = (state) => {
+    const today = new Date();
+    const todayKey = today.toISOString().slice(0, 10);
+    if (!state.lastVisit) {
+        state.streak = 1;
+        state.lastVisit = todayKey;
+        return;
+    }
+    if (state.lastVisit === todayKey) {
+        return;
+    }
+    const lastDate = new Date(state.lastVisit);
+    const diff = Math.round((today - lastDate) / (1000 * 60 * 60 * 24));
+    if (diff === 1) {
+        state.streak += 1;
+    } else {
+        state.streak = 1;
+    }
+    state.lastVisit = todayKey;
+};
+
+const simulatePurchase = (state, profile) => {
+    updateStreak(state);
     state.stamps += 1;
-    state.points += 120;
+    state.points += profile.ecoOptIn ? 140 : 120;
+    state.missionProgress = Math.min(state.missionProgress + 35, 100);
     addHistory(state, {
         title: 'Капучино / To-go',
-        subtitle: 'Начислено 1 штамп + 120 баллов',
-        points: '+120',
+        subtitle: profile.ecoOptIn
+            ? 'Начислено 1 штамп + 140 баллов (эко‑бонус)'
+            : 'Начислено 1 штамп + 120 баллов',
+        points: profile.ecoOptIn ? '+140' : '+120',
     });
     if (state.stamps >= 5) {
         state.freeCups += 1;
@@ -223,10 +270,10 @@ const redeemCup = (state) => {
     });
 };
 
-const renderAll = (state) => {
+const renderAll = (state, profile) => {
     renderStamps(state);
     renderHistory(state);
-    renderStats(state);
+    renderStats(state, profile);
     saveState(state);
 };
 
@@ -249,8 +296,10 @@ const setAuthenticated = (profile) => {
     bottomNav.hidden = false;
     if (profilePhone) profilePhone.textContent = profile.phone;
     if (birthdayInput) birthdayInput.value = profile.birthday || '';
+    if (favoriteSelect) favoriteSelect.value = profile.favorite || '';
     if (promoToggle) promoToggle.checked = profile.promoOptIn;
     if (birthdayToggle) birthdayToggle.checked = profile.birthdayOptIn;
+    if (ecoToggle) ecoToggle.checked = profile.ecoOptIn;
     showTab('home');
 };
 
@@ -330,6 +379,7 @@ if (authForm && authButton && otpField) {
         const profile = { ...defaultProfile, phone };
         saveProfile(profile);
         setAuthenticated(profile);
+        renderAll(state, profile);
     });
 }
 
@@ -341,17 +391,28 @@ if (birthdayInput) {
     });
 }
 
+if (favoriteSelect) {
+    favoriteSelect.addEventListener('change', () => {
+        const profile = loadProfile();
+        profile.favorite = favoriteSelect.value;
+        saveProfile(profile);
+        renderAll(state, profile);
+    });
+}
+
 const handleToggle = (toggle, key) => {
     if (!toggle) return;
     toggle.addEventListener('change', () => {
         const profile = loadProfile();
         profile[key] = toggle.checked;
         saveProfile(profile);
+        renderAll(state, profile);
     });
 };
 
 handleToggle(promoToggle, 'promoOptIn');
 handleToggle(birthdayToggle, 'birthdayOptIn');
+handleToggle(ecoToggle, 'ecoOptIn');
 
 if (bottomNav) {
     bottomNav.addEventListener('click', (event) => {
@@ -369,19 +430,21 @@ quickCards.forEach((card) => {
 });
 
 const state = loadState();
-renderAll(state);
-
 const notifications = loadNotifications();
+const profile = loadProfile();
+
+renderAll(state, profile);
 renderNotifications(notifications);
 
 addStampButton?.addEventListener('click', () => {
-    simulatePurchase(state);
-    renderAll(state);
+    const currentProfile = loadProfile();
+    simulatePurchase(state, currentProfile);
+    renderAll(state, currentProfile);
 });
 
 redeemCupButton?.addEventListener('click', () => {
     redeemCup(state);
-    renderAll(state);
+    renderAll(state, loadProfile());
 });
 
 scanButton?.addEventListener('click', () => {
@@ -390,7 +453,7 @@ scanButton?.addEventListener('click', () => {
         subtitle: 'QR‑код готов для кассира.',
         points: '0',
     });
-    renderAll(state);
+    renderAll(state, loadProfile());
 });
 
 logoutButton?.addEventListener('click', () => {
@@ -405,9 +468,41 @@ testPushButton?.addEventListener('click', () => {
     });
 });
 
-handleAuth();
+startPickupButton?.addEventListener('click', () => {
+    const minutes = Number(pickupTime?.value || 10);
+    const readyAt = new Date(Date.now() + minutes * 60000);
+    if (pickupStatus) {
+        pickupStatus.textContent = `Готовим. Забрать в ${readyAt.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit',
+        })}`;
+    }
+    addHistory(state, {
+        title: 'Pickup заказ',
+        subtitle: `Ожидает выдачи через ${minutes} мин.`,
+        points: '0',
+    });
+    renderAll(state, loadProfile());
+});
 
-const profile = loadProfile();
+copyReferralButton?.addEventListener('click', async () => {
+    const code = referralCode?.textContent || '';
+    if (!code) return;
+    try {
+        await navigator.clipboard.writeText(code);
+        addNotification(notifications, {
+            title: 'Код скопирован',
+            body: `${code} отправлен в буфер обмена.`,
+        });
+    } catch (error) {
+        addNotification(notifications, {
+            title: 'Скопировать не удалось',
+            body: 'Выделите код вручную.',
+        });
+    }
+});
+
+handleAuth();
 maybeBirthdayNotification(profile, notifications);
 
 let deferredPrompt = null;
