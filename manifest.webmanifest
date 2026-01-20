@@ -4,8 +4,8 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "background_color": "#0b0b0b",
-    "theme_color": "#0b0b0b",
+    "background_color": "#f7cf28",
+    "theme_color": "#f7cf28",
     "description": "Цифровая Black-Card гостя Kapouch с оплатой через Тинькофф СБП и фискализацией 54-ФЗ.",
     "icons": [
         {

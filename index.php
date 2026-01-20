@@ -28,7 +28,7 @@ if (isset($_GET['status'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($brand['name']) ?> — Black Card PWA</title>
     <meta name="description" content="Цифровая Black-Card гостя Kapouch: статус, привилегии, бесконтактная оплата через Тинькофф СБП и фискализация чеков 54-ФЗ.">
-    <meta name="theme-color" content="#0b0b0b">
+    <meta name="theme-color" content="#f7cf28">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/styles.css">
@@ -41,7 +41,7 @@ if (isset($_GET['status'])) {
                     <span class="logo-mark">K</span>
                     <div>
                         <div class="logo-title"><?= htmlspecialchars($brand['name']) ?></div>
-                        <div class="logo-subtitle">Black Card Loyalty</div>
+                        <div class="logo-subtitle">Кофе с собой</div>
                     </div>
                 </div>
                 <div class="nav-actions">
