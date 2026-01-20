@@ -1,9 +1,25 @@
 <?php
+session_start();
+
 $brand = [
     'name' => 'Kapouch',
     'address' => 'Россия, Иркутская область, г. Шелехов, Култукский тракт 25/1',
     'tagline' => 'Ultra-premium coffee experience',
 ];
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
+
+$notice = '';
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'success') {
+        $notice = 'Запрос получен. Concierge свяжется с вами в течение 24 часов.';
+    }
+    if ($_GET['status'] === 'error') {
+        $notice = 'Не удалось отправить запрос. Попробуйте еще раз или свяжитесь с нами напрямую.';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -19,7 +35,7 @@ $brand = [
 </head>
 <body>
     <div class="page">
-        <header class="hero">
+        <header class="hero" id="top">
             <nav class="nav">
                 <div class="logo">
                     <span class="logo-mark">K</span>
@@ -28,7 +44,13 @@ $brand = [
                         <div class="logo-subtitle">Black Card Loyalty</div>
                     </div>
                 </div>
-                <button class="install-btn" id="installButton" hidden>Установить PWA</button>
+                <div class="nav-actions">
+                    <a class="nav-link" href="#experience">Опыт</a>
+                    <a class="nav-link" href="#payment">Оплата</a>
+                    <a class="nav-link" href="#tiers">Уровни</a>
+                    <a class="nav-link" href="#concierge">Concierge</a>
+                    <button class="install-btn" id="installButton" hidden>Установить PWA</button>
+                </div>
             </nav>
             <div class="hero-grid">
                 <div class="hero-copy">
@@ -53,6 +75,20 @@ $brand = [
                             <span class="meta-value">concierge@kapouch.ru</span>
                         </div>
                     </div>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <span class="stat-value">2 мин</span>
+                            <span class="stat-label">Среднее время обслуживания</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">24/7</span>
+                            <span class="stat-label">Личный concierge</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">99.9%</span>
+                            <span class="stat-label">Доступность сервиса</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="hero-card">
                     <div class="card-top">
@@ -65,12 +101,19 @@ $brand = [
                         <span>Kapouch</span>
                         <span id="cardDate">--/--</span>
                     </div>
+                    <div class="card-badge">Premium access</div>
                 </div>
             </div>
         </header>
 
         <main>
-            <section class="section">
+            <?php if ($notice !== ''): ?>
+                <div class="status-banner" role="status">
+                    <?= htmlspecialchars($notice) ?>
+                </div>
+            <?php endif; ?>
+
+            <section class="section" id="experience">
                 <div class="section-head">
                     <h2>Сервис уровня private club</h2>
                     <p>Каждое касание с брендом — это сценарий luxury‑опыта: скорость, приватность и персонализация.</p>
@@ -95,7 +138,7 @@ $brand = [
                 </div>
             </section>
 
-            <section class="section card-section">
+            <section class="section card-section" id="tiers">
                 <div class="section-head">
                     <h2>Black‑Card интерфейс</h2>
                     <p>Минималистичная PWA‑витрина поддерживает офлайн‑режим и мгновенную загрузку на shared‑хостинге.</p>
@@ -119,7 +162,37 @@ $brand = [
                 </div>
             </section>
 
-            <section class="section payment-section">
+            <section class="section journey">
+                <div class="section-head">
+                    <h2>Сценарий визита</h2>
+                    <p>Путь гостя от бронирования до оплаты выстроен как бесшовный luxury‑ритуал.</p>
+                </div>
+                <div class="timeline">
+                    <div class="timeline-step">
+                        <span class="step-index">01</span>
+                        <div>
+                            <h3>Private бронирование</h3>
+                            <p>Concierge подтверждает визит и подготавливает индивидуальный сет.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-index">02</span>
+                        <div>
+                            <h3>Идентификация Black‑Card</h3>
+                            <p>PWA‑карта активируется в один тап, открывая персональные настройки.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <span class="step-index">03</span>
+                        <div>
+                            <h3>СБП‑оплата</h3>
+                            <p>QR‑код формируется автоматически, чек фискализируется через Тинькофф.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section payment-section" id="payment">
                 <div class="section-head">
                     <h2>Оплата и чеки</h2>
                     <p>Единый поток оплаты СБП + фискализация 54‑ФЗ — полностью совместим с Тинькофф и Beget.</p>
@@ -152,26 +225,71 @@ $brand = [
                 </div>
             </section>
 
-            <section class="section concierge">
+            <section class="section tech">
+                <div class="section-head">
+                    <h2>Технологическая витрина</h2>
+                    <p>Система готова к интеграции с POS, CRM и витринами премиального контента.</p>
+                </div>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h3>PWA‑ядро</h3>
+                        <p>Мгновенный запуск, офлайн‑режим и установка в один тап без App Store.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>Безопасность</h3>
+                        <p>CSRF‑защита формы и минимизация данных для персональных запросов.</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>Гибкая аналитика</h3>
+                        <p>Сегментация гостей и контроль LTV на уровне событий.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section concierge" id="concierge">
                 <div class="section-head">
                     <h2>Индивидуальный concierge</h2>
                     <p>Оставьте контакт, и мы персонализируем карту под ваши привычки.</p>
                 </div>
-                <form class="concierge-form">
+                <form class="concierge-form" id="conciergeForm" action="/submit.php" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <label>
                         Имя гостя
-                        <input type="text" placeholder="Анна" required>
+                        <input type="text" name="guest_name" placeholder="Анна" maxlength="60" required>
                     </label>
                     <label>
                         Контакт
-                        <input type="text" placeholder="Телефон или e-mail" required>
+                        <input type="text" name="contact" placeholder="Телефон или e-mail" maxlength="80" required>
                     </label>
                     <label>
                         Предпочтения
-                        <textarea placeholder="Например: авторские напитки, приватный зал"></textarea>
+                        <textarea name="preferences" placeholder="Например: авторские напитки, приватный зал" maxlength="400"></textarea>
                     </label>
-                    <button type="submit" class="primary">Отправить запрос</button>
+                    <button type="submit" class="primary" id="submitButton">Отправить запрос</button>
+                    <p class="form-note">Мы используем данные только для связи и персонализации сервиса.</p>
                 </form>
+                <div class="toast" id="formToast" hidden></div>
+            </section>
+
+            <section class="section faq">
+                <div class="section-head">
+                    <h2>FAQ</h2>
+                    <p>Ответы на частые вопросы о работе Black‑Card.</p>
+                </div>
+                <div class="faq-grid">
+                    <details>
+                        <summary>Как получить Black‑Card?</summary>
+                        <p>Оставьте заявку через concierge‑форму. Мы свяжемся и согласуем удобный формат активации.</p>
+                    </details>
+                    <details>
+                        <summary>Где хранится история чеков?</summary>
+                        <p>Чеки сохраняются в личном кабинете и отправляются гостю в SMS или email.</p>
+                    </details>
+                    <details>
+                        <summary>Можно ли пользоваться картой офлайн?</summary>
+                        <p>Да, ключевые данные доступны офлайн благодаря сервис‑воркеру PWA.</p>
+                    </details>
+                </div>
             </section>
         </main>
 

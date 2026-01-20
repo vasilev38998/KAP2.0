@@ -1,5 +1,8 @@
 const installButton = document.getElementById('installButton');
 const cardDate = document.getElementById('cardDate');
+const conciergeForm = document.getElementById('conciergeForm');
+const submitButton = document.getElementById('submitButton');
+const formToast = document.getElementById('formToast');
 
 if (cardDate) {
     const now = new Date();
@@ -27,6 +30,49 @@ if (installButton) {
         await deferredPrompt.userChoice;
         deferredPrompt = null;
         installButton.hidden = true;
+    });
+}
+
+if (conciergeForm) {
+    conciergeForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Отправляем...';
+        }
+        if (formToast) {
+            formToast.hidden = true;
+        }
+
+        try {
+            const response = await fetch(conciergeForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new FormData(conciergeForm),
+            });
+            const payload = await response.json();
+            if (formToast) {
+                formToast.textContent = payload.message || 'Запрос отправлен.';
+                formToast.hidden = false;
+                formToast.classList.toggle('toast--error', !payload.success);
+            }
+            if (payload.success) {
+                conciergeForm.reset();
+            }
+        } catch (error) {
+            if (formToast) {
+                formToast.textContent = 'Сервис временно недоступен. Попробуйте позже.';
+                formToast.hidden = false;
+                formToast.classList.add('toast--error');
+            }
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Отправить запрос';
+            }
+        }
     });
 }
 

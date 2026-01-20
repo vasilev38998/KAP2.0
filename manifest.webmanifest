@@ -1,7 +1,8 @@
 {
     "name": "Kapouch Black Card",
     "short_name": "Kapouch",
-    "start_url": "/index.php",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#0b0b0b",
     "theme_color": "#0b0b0b",
