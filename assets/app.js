@@ -14,6 +14,7 @@ const tabProfile = document.getElementById('tabProfile');
 
 const stampGrid = document.getElementById('stampGrid');
 const historyList = document.getElementById('historyList');
+const notificationList = document.getElementById('notificationList');
 const pointsBalance = document.getElementById('pointsBalance');
 const cashbackPercent = document.getElementById('cashbackPercent');
 const walletPoints = document.getElementById('walletPoints');
@@ -21,14 +22,19 @@ const walletFree = document.getElementById('walletFree');
 const walletTier = document.getElementById('walletTier');
 const profilePhone = document.getElementById('profilePhone');
 const profileTier = document.getElementById('profileTier');
+const birthdayInput = document.getElementById('birthdayInput');
+const promoToggle = document.getElementById('promoToggle');
+const birthdayToggle = document.getElementById('birthdayToggle');
 
 const addStampButton = document.getElementById('addStamp');
 const redeemCupButton = document.getElementById('redeemCup');
 const scanButton = document.getElementById('scanButton');
 const logoutButton = document.getElementById('logoutButton');
+const testPushButton = document.getElementById('testPush');
 
 const storageKey = 'kapouch-loyalty-profile';
 const loyaltyKey = 'kapouch-loyalty-state';
+const notificationsKey = 'kapouch-loyalty-notifications';
 
 const tiers = [
     { name: 'Silver', threshold: 0, cashback: 4 },
@@ -43,6 +49,13 @@ const defaultState = {
     history: [],
 };
 
+const defaultProfile = {
+    phone: '',
+    birthday: '',
+    promoOptIn: true,
+    birthdayOptIn: true,
+};
+
 const loadState = () => {
     try {
         const saved = localStorage.getItem(loyaltyKey);
@@ -54,6 +67,32 @@ const loadState = () => {
 
 const saveState = (state) => {
     localStorage.setItem(loyaltyKey, JSON.stringify(state));
+};
+
+const loadProfile = () => {
+    try {
+        const saved = localStorage.getItem(storageKey);
+        return saved ? { ...defaultProfile, ...JSON.parse(saved) } : { ...defaultProfile };
+    } catch (error) {
+        return { ...defaultProfile };
+    }
+};
+
+const saveProfile = (profile) => {
+    localStorage.setItem(storageKey, JSON.stringify(profile));
+};
+
+const loadNotifications = () => {
+    try {
+        const saved = localStorage.getItem(notificationsKey);
+        return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+        return [];
+    }
+};
+
+const saveNotifications = (notifications) => {
+    localStorage.setItem(notificationsKey, JSON.stringify(notifications));
 };
 
 const getTier = (points) => {
@@ -106,6 +145,25 @@ const renderHistory = (state) => {
     });
 };
 
+const renderNotifications = (notifications) => {
+    if (!notificationList) return;
+    notificationList.innerHTML = '';
+    if (notifications.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'notification-empty';
+        empty.textContent = 'Пока нет уведомлений. Мы сообщим о новых бонусах.';
+        notificationList.appendChild(empty);
+        return;
+    }
+    notifications.slice(0, 4).forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'notification-item';
+        card.innerHTML
+            = `<strong>${item.title}</strong><span>${item.body}</span>`;
+        notificationList.appendChild(card);
+    });
+};
+
 const renderStats = (state) => {
     const tier = getTier(state.points);
     const next = getNextTier(state.points);
@@ -121,6 +179,12 @@ const renderStats = (state) => {
 const addHistory = (state, entry) => {
     state.history.unshift(entry);
     state.history = state.history.slice(0, 12);
+};
+
+const addNotification = (notifications, entry) => {
+    notifications.unshift(entry);
+    saveNotifications(notifications);
+    renderNotifications(notifications);
 };
 
 const simulatePurchase = (state) => {
@@ -184,6 +248,9 @@ const setAuthenticated = (profile) => {
     dashboard.hidden = false;
     bottomNav.hidden = false;
     if (profilePhone) profilePhone.textContent = profile.phone;
+    if (birthdayInput) birthdayInput.value = profile.birthday || '';
+    if (promoToggle) promoToggle.checked = profile.promoOptIn;
+    if (birthdayToggle) birthdayToggle.checked = profile.birthdayOptIn;
     showTab('home');
 };
 
@@ -199,7 +266,7 @@ const setLoggedOut = () => {
 const handleAuth = () => {
     const storedProfile = localStorage.getItem(storageKey);
     if (storedProfile) {
-        setAuthenticated(JSON.parse(storedProfile));
+        setAuthenticated(loadProfile());
     } else {
         setLoggedOut();
     }
@@ -214,6 +281,21 @@ const showError = (message) => {
 const clearError = () => {
     if (!authError) return;
     authError.hidden = true;
+};
+
+const maybeBirthdayNotification = (profile, notifications) => {
+    if (!profile.birthday || !profile.birthdayOptIn) return;
+    const birthdayDate = new Date(profile.birthday);
+    if (Number.isNaN(birthdayDate.getTime())) return;
+    const today = new Date();
+    const thisYear = new Date(today.getFullYear(), birthdayDate.getMonth(), birthdayDate.getDate());
+    const diff = Math.ceil((thisYear - today) / (1000 * 60 * 60 * 24));
+    if (diff >= 0 && diff <= 7) {
+        addNotification(notifications, {
+            title: 'Скоро день рождения',
+            body: 'Подарок +150 баллов ждёт вас в Kapouch!',
+        });
+    }
 };
 
 if (authForm && authButton && otpField) {
@@ -245,11 +327,31 @@ if (authForm && authButton && otpField) {
             return;
         }
 
-        const profile = { phone };
-        localStorage.setItem(storageKey, JSON.stringify(profile));
+        const profile = { ...defaultProfile, phone };
+        saveProfile(profile);
         setAuthenticated(profile);
     });
 }
+
+if (birthdayInput) {
+    birthdayInput.addEventListener('change', () => {
+        const profile = loadProfile();
+        profile.birthday = birthdayInput.value;
+        saveProfile(profile);
+    });
+}
+
+const handleToggle = (toggle, key) => {
+    if (!toggle) return;
+    toggle.addEventListener('change', () => {
+        const profile = loadProfile();
+        profile[key] = toggle.checked;
+        saveProfile(profile);
+    });
+};
+
+handleToggle(promoToggle, 'promoOptIn');
+handleToggle(birthdayToggle, 'birthdayOptIn');
 
 if (bottomNav) {
     bottomNav.addEventListener('click', (event) => {
@@ -268,6 +370,9 @@ quickCards.forEach((card) => {
 
 const state = loadState();
 renderAll(state);
+
+const notifications = loadNotifications();
+renderNotifications(notifications);
 
 addStampButton?.addEventListener('click', () => {
     simulatePurchase(state);
@@ -293,7 +398,17 @@ logoutButton?.addEventListener('click', () => {
     setLoggedOut();
 });
 
+testPushButton?.addEventListener('click', () => {
+    addNotification(notifications, {
+        title: 'Ваша очередь готова',
+        body: 'Заказ №024 ждёт на стойке выдачи.',
+    });
+});
+
 handleAuth();
+
+const profile = loadProfile();
+maybeBirthdayNotification(profile, notifications);
 
 let deferredPrompt = null;
 

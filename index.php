@@ -18,7 +18,7 @@ if (empty($_SESSION['csrf_token'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($brand['name']) ?> — Loyalty App</title>
-    <meta name="description" content="Kapouch Loyalty — приложение для накопления баллов и бесплатного 6-го кофе.">
+    <meta name="description" content="Kapouch Loyalty — платформа баллов, штампов, подарков и персональных уведомлений.">
     <meta name="theme-color" content="#f7cf28">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
@@ -87,6 +87,14 @@ if (empty($_SESSION['csrf_token'])) {
                 <button class="primary" id="addStamp">Добавить покупку</button>
             </div>
 
+            <div class="notification-card">
+                <div class="section-head">
+                    <h3>Уведомления</h3>
+                    <button class="ghost" id="testPush">Тест‑пуш</button>
+                </div>
+                <div class="notification-list" id="notificationList"></div>
+            </div>
+
             <div class="quick-actions">
                 <button class="quick-card" data-tab="offers">
                     <span class="quick-title">Акции дня</span>
@@ -118,6 +126,27 @@ if (empty($_SESSION['csrf_token'])) {
                         <p>Начислим +2 штампа за утренний заказ до 11:00.</p>
                         <span>Сегодня</span>
                     </article>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-head">
+                    <h3>Что нового в Kapouch</h3>
+                    <a href="#" class="section-link">12 функций</a>
+                </div>
+                <div class="innovation-grid">
+                    <article class="innovation-card">Подарок ко дню рождения +150 баллов</article>
+                    <article class="innovation-card">Push‑уведомления о новых напитках</article>
+                    <article class="innovation-card">QR‑оплата без кассы</article>
+                    <article class="innovation-card">Заказ заранее и pickup‑таймер</article>
+                    <article class="innovation-card">Избранные напитки и быстрый заказ</article>
+                    <article class="innovation-card">Подписка «Кофе каждое утро»</article>
+                    <article class="innovation-card">Эко‑бонус за собственный стакан</article>
+                    <article class="innovation-card">Стрики за ежедневные визиты</article>
+                    <article class="innovation-card">Партнёрские предложения рядом</article>
+                    <article class="innovation-card">Отзывы за бонусные баллы</article>
+                    <article class="innovation-card">Внутренний кошелёк и подарочные карты</article>
+                    <article class="innovation-card">Семейные аккаунты и общий баланс</article>
                 </div>
             </div>
 
@@ -177,14 +206,32 @@ if (empty($_SESSION['csrf_token'])) {
                 <p>Настройки аккаунта и контактные данные.</p>
             </div>
             <div class="profile-card">
-                <div>
+                <label class="profile-field">
                     <span class="profile-label">Телефон</span>
                     <strong id="profilePhone">—</strong>
-                </div>
-                <div>
+                </label>
+                <label class="profile-field">
+                    <span class="profile-label">Дата рождения</span>
+                    <input type="date" id="birthdayInput">
+                </label>
+                <label class="profile-field">
                     <span class="profile-label">Статус</span>
                     <strong id="profileTier">Silver</strong>
-                </div>
+                </label>
+                <label class="profile-field">
+                    <span class="profile-label">Уведомления</span>
+                    <div class="toggle">
+                        <input type="checkbox" id="promoToggle">
+                        <span></span>
+                    </div>
+                </label>
+                <label class="profile-field">
+                    <span class="profile-label">Push поздравления</span>
+                    <div class="toggle">
+                        <input type="checkbox" id="birthdayToggle">
+                        <span></span>
+                    </div>
+                </label>
                 <div>
                     <span class="profile-label">Поддержка</span>
                     <strong><?= htmlspecialchars($brand['support']) ?></strong>
